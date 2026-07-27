@@ -1,35 +1,30 @@
 use anyhow::Result;
-
+use logforth::append;
+use logforth::record::{Level, LevelFilter};
+use logforth_rerun::RerunAppender;
 use rerun::RecordingStreamBuilder;
 
-use tracing_subscriber::{filter::LevelFilter, Registry};
-use tracing_rerun::RerunLayer;
-use tracing_subscriber::prelude::*;
-
 fn main() -> Result<()> {
-    // Create a Rerun recording (change to .spawn(), .save(), or .connect_tcp(...) as you prefer)
-    let rec = RecordingStreamBuilder::new("my_app").serve_grpc()?;
+    // Save to an .rrd file; use .connect_grpc(...) or .spawn() for a live viewer instead.
+    let rec = RecordingStreamBuilder::new("my_app").save("logforth_export.rrd")?;
 
-    let rerun_layer = RerunLayer {
-        rec: rec.clone(),
-        path: "logs/tracing".into(),
-    };
-
-    // Install globally (try_init avoids panics if something already set a subscriber)
-    let subscriber = Registry::default()
-        .with(LevelFilter::INFO) // filter out low-level debug tracing (eg tokio executor)
-        .with(tracing_subscriber::fmt::Layer::default()) // log to stdout
-        .with(rerun_layer);
-
-    tracing::subscriber::set_global_default(subscriber).expect("setting global default failed");
-
-    // Example usage
+    logforth::starter_log::builder()
+        .dispatch(|d| {
+            d.filter(LevelFilter::MoreSevereEqual(Level::Info))
+                .append(append::Stderr::default())
+        })
+        .dispatch(|d| {
+            d.append(RerunAppender {
+                rec: rec.clone(),
+                path: "logs".into(),
+            })
+        })
+        .apply();
 
     loop {
-        tracing::error!(user_id = 42, "hello from tracing — goes to stdout and Rerun");
-        tracing::info!(target: "db", op = "select", rows = 3, "query finished");
-        tracing::warn!(target: "auth", "token expired");
+        log::error!("hello from log, goes to stderr and Rerun");
+        log::info!(target: "db", "query finished (op=select rows=3)");
+        log::warn!(target: "auth", "token expired");
         std::thread::sleep(std::time::Duration::from_millis(5000));
     }
-
 }

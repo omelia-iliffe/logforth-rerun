@@ -1,17 +1,18 @@
 [package]
-name = "tracing-rerun"
-version = "0.2.2"
+name = "logforth-rerun"
+version = "0.3.0"
 edition = "2024"
 license = "MIT"
-description = "A tracing layer to send logs to rerun"
-homepage = "https://github.com/therishidesai/tracing-rerun"
-repository = "https://github.com/therishidesai/tracing-rerun"
+description = "A logforth appender to send logs to rerun"
+homepage = "https://github.com/omelia-iliffe/logforth-rerun"
+repository = "https://github.com/omelia-iliffe/logforth-rerun"
 readme = "README.md"
 
 [dependencies]
-rerun = "0"
-tracing = "0"
-tracing-subscriber = "0"
+rerun = { version = "0.34", default-features = false, features = ["sdk"] }
+logforth = { version = "0.30", default-features = false }
 
 [dev-dependencies]
 anyhow = "1.0.100"
+log = "0.4"
+logforth = { version = "0.30", features = ["starter-log"] }
