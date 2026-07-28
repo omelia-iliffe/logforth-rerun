@@ -13,12 +13,7 @@ fn main() -> Result<()> {
             d.filter(LevelFilter::MoreSevereEqual(Level::Info))
                 .append(append::Stderr::default())
         })
-        .dispatch(|d| {
-            d.append(RerunAppender {
-                rec: rec.clone(),
-                path: "logs".into(),
-            })
-        })
+        .dispatch(|d| d.append(RerunAppender::new(rec.clone(), "logs")))
         .apply();
 
     loop {
